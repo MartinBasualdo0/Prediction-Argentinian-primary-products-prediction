@@ -64,7 +64,7 @@ for p in range(0,max_p+1):
                 agrega_fila_datos_modelo(calibration_df, variable, existe_estacionalidad, transform_log,p,d,q)
                 
 calibration_df = calibration_df.drop_duplicates()  
-calibration_df.to_excel(f"./data/calibration/calibration_{variable}.xlsx", index=False)
+calibration_df.to_excel(f"./data/calibration_sarimax/calibration_{variable}.xlsx", index=False)
 
 end_time = time.time()
 elapsed_time = end_time - start_time

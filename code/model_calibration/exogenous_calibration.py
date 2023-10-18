@@ -89,7 +89,7 @@ for modelo in models_params:
 
             
     calibration_df = calibration_df.drop_duplicates()  
-    calibration_df.to_excel(f"./data/calibration/calibration_{variable}.xlsx", index=False)
+    calibration_df.to_excel(f"./data/calibration_sarimax/calibration_{variable}.xlsx", index=False)
     print(modelo, "TERMINADO!")
     end_time = time.time()
     elapsed_time = end_time - start_time
