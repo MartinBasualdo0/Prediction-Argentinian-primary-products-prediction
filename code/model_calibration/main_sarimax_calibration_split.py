@@ -21,6 +21,7 @@ def agrega_fila_datos_modelo(calibration_df: pd.DataFrame, variable: str, existe
                              P:int=None, D:int=None, Q:int=None, M:int=None):
     tscv = TimeSeriesSplit(n_splits = 5)
     RMSE = []
+    MSE = []
     seasonal_order = (P,D,Q,M) if existe_estacionalidad else (0,0,0,0)  # provide a default value
     for train_index, test_index in tscv.split(df):
         cv_train, cv_test = df.iloc[train_index],df.iloc[test_index]
@@ -30,24 +31,14 @@ def agrega_fila_datos_modelo(calibration_df: pd.DataFrame, variable: str, existe
         try:
             model_fit = sarima_exog.fit(maxiter=20_000)
             predictions = model_fit.forecast(meses_prediccion, exog = cv_test[X])
-            rmse_split = sqrt(mean_squared_error(cv_test["pp"], predictions))
+            mse_split = mean_squared_error(cv_test["pp"], predictions)
+            rmse_split = sqrt(mse_split)  
+            RMSE.append(rmse_split)
         except Exception as e:
-            rmse_split = "error"
-        
-
-
-
-    try:
-        
-        fitted_values = np.exp(model_fit.fittedvalues) if transform_log else model_fit.fittedvalues
-        aic = model_fit.aic
-        MSE = mean_squared_error(fitted_values, Data.train_df[variable])
-        RMSE = math.sqrt(MSE)
-    except Exception as e:
-        print(f"Failed to fit model {p,d,q,Q,D,Q,M} for variable {variable}. Error: {e}")
-        aic = "error"
-        MSE = "error"
-        RMSE = "error"
+            print(f"Failed to fit model {p,d,q,Q,D,Q,M} for variable {variable}. Error: {e}")
+            RMSE = "error"
+    RMSE = np.mean(RMSE) if RMSE != "error" else "error"
+    MSE = np.mean(MSE) if MSE != "error" else "error"
     new_row = {
         'variable': variable,
         'p': p,
@@ -57,11 +48,11 @@ def agrega_fila_datos_modelo(calibration_df: pd.DataFrame, variable: str, existe
         'D': D,
         'Q': Q,
         'M': M,
-        'AIC': aic,
         'MSE': MSE,
         'RMSE':RMSE
     }
     calibration_df.loc[len(calibration_df)] = new_row
+        
     
 calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M', 'AIC', 'MSE','RMSE'])
 for p in range(0,max_p+1):
