@@ -47,6 +47,7 @@ def agrega_fila_datos_modelo(calibration_df: pd.DataFrame, variable: str, existe
             mse_split = mean_squared_error(cv_test[variable], predictions)
             rmse_split = sqrt(mse_split)  
             RMSE.append(rmse_split)
+            MSE.append(mse_split)
         except Exception as e:
             print(f"Failed to fit model {p,d,q,Q,D,Q,M} for variable {variable}. Error: {e}")
             RMSE = "error"
