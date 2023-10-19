@@ -31,7 +31,7 @@ def agrega_fila_datos_modelo(calibration_df: pd.DataFrame, variable: str, existe
         try:
             model_fit = sarima_exog.fit(maxiter=20_000)
             predictions = model_fit.forecast(meses_prediccion, exog = cv_test[X])
-            mse_split = mean_squared_error(cv_test["pp"], predictions)
+            mse_split = mean_squared_error(cv_test[variable], predictions)
             rmse_split = sqrt(mse_split)  
             RMSE.append(rmse_split)
         except Exception as e:
