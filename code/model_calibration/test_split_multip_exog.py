@@ -76,7 +76,8 @@ def agrega_fila_datos_modelo(args):
     calibration_df.loc[len(calibration_df)] = new_row
 
     
-if __name__ == "main":
+if __name__ == "__main__":
+    print("topu")
     for modelo in models_params:
         max_p = models_params[modelo]["max_p"]
         max_q = models_params[modelo]["max_q"]
@@ -84,6 +85,7 @@ if __name__ == "main":
         existe_estacionalidad =  models_params[modelo]["existe_estacionalidad"]
         transform_log =  models_params[modelo]["transform_log"]
         M = 12 if existe_estacionalidad else 1
+        calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M','MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5','MSE','RMSE'])
         
         pool = mp.Pool(mp.cpu_count())
         args = [(calibration_df, variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M) for p in range(0,max_p+1) for d in range(0,2) for q in range(0,max_q+1) for P in range(0,2) for D in range(0,2) for Q in range(0,2)]
