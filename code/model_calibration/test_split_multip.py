@@ -54,11 +54,11 @@ def agrega_fila_datos_modelo(args):
         'D': D,
         'Q': Q,
         'M': M,
-        'MSE_spilt_1': MSE_list[0] if MSE_list !="error" else "error",
-        'MSE_spilt_2': MSE_list[1] if MSE_list !="error" else "error",
-        'MSE_spilt_3': MSE_list[2] if MSE_list !="error" else "error",
-        'MSE_spilt_4': MSE_list[3] if MSE_list !="error" else "error",
-        'MSE_spilt_5': MSE_list[4] if MSE_list !="error" else "error",
+        'MSE_split_1': MSE_list[0] if MSE_list !="error" else "error",
+        'MSE_split_2': MSE_list[1] if MSE_list !="error" else "error",
+        'MSE_split_3': MSE_list[2] if MSE_list !="error" else "error",
+        'MSE_split_4': MSE_list[3] if MSE_list !="error" else "error",
+        'MSE_split_5': MSE_list[4] if MSE_list !="error" else "error",
         'MSE': MSE,
         'RMSE':RMSE
     }
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     results = pool.map(agrega_fila_datos_modelo, args)
     pool.close()
 
-    calibration_df = pd.DataFrame(results, columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M', 'AIC', 'MSE','RMSE'])
+    calibration_df = pd.DataFrame(results, columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M','MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5','MSE','RMSE'])
     calibration_df = calibration_df.drop_duplicates()  
     calibration_df.to_excel(f"./data/test/calibration_{variable}.xlsx", index=False)
     
