@@ -96,3 +96,7 @@ if __name__ == "__main__":
         calibration_df = calibration_df.drop_duplicates()  
         calibration_df.to_excel(f"./data/test/calibration_{variable}.xlsx", index=False)
         
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        minutes, seconds = divmod(elapsed_time, 60)
+        print(f"The script took {int(minutes)} minutes and {seconds:.0f} seconds to run.")
