@@ -51,6 +51,7 @@ def agrega_fila_datos_modelo(calibration_df: pd.DataFrame, variable: str, existe
         except Exception as e:
             print(f"Failed to fit model {p,d,q,Q,D,Q,M} for variable {variable}. Error: {e}")
             RMSE = "error"
+            MSE = "error"
     RMSE = np.mean(RMSE) if RMSE != "error" else "error"
     MSE = np.mean(MSE) if MSE != "error" else "error"
     new_row = {
