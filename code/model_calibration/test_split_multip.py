@@ -17,7 +17,7 @@ variable = "pp"
 existe_estacionalidad = True
 transform_log = False
 X = ["itcr", "ip", "pre"]
-calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M', 'AIC', 'MSE','RMSE'])
+calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M','MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5','MSE','RMSE'])
 n_splits = 5
 
 def agrega_fila_datos_modelo(args):
