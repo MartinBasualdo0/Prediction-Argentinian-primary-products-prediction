@@ -75,6 +75,7 @@ def agrega_fila_datos_modelo(args):
     }
     print(new_row)
     calibration_df.loc[len(calibration_df)] = new_row
+    print(calibration_df)
 
     
 if __name__ == "__main__":

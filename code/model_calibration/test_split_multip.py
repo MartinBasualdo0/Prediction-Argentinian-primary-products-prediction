@@ -62,6 +62,7 @@ def agrega_fila_datos_modelo(args):
         'MSE': MSE,
         'RMSE':RMSE
     }
+    print(new_row)
     calibration_df.loc[len(calibration_df)] = new_row
     
     
