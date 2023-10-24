@@ -26,7 +26,7 @@ calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q',
 n_splits = 5
 
 def agrega_fila_datos_modelo(args):
-    calibration_df, variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M = args
+    variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M = args
     tscv = TimeSeriesSplit(n_splits = n_splits)
     RMSE_list = []
     MSE_list = []
@@ -67,20 +67,19 @@ def agrega_fila_datos_modelo(args):
         'MSE': MSE,
         'RMSE':RMSE
     }
-    calibration_df.loc[len(calibration_df)] = new_row
-    return calibration_df
+    return new_row
     
 if __name__ == '__main__':
     start_time = time.time()
     pool = mp.Pool(mp.cpu_count())
-    args = [(calibration_df, variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M) for p in range(0,max_p+1) for d in range(0,2) for q in range(0,max_q+1) for P in range(0,2) for D in range(0,2) for Q in range(0,2)]
+    args = [(variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M) for p in range(0,max_p+1) for d in range(0,2) for q in range(0,max_q+1) for P in range(0,2) for D in range(0,2) for Q in range(0,2)]
     results = pool.map(agrega_fila_datos_modelo, args)
-    results = pd.concat(results)
+    results = pd.DataFrame(results)
     pool.close()
 
-    calibration_df = pd.DataFrame(results, columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M','MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5','MSE','RMSE'])
-    # calibration_df = calibration_df.drop_duplicates()  
-    calibration_df.to_excel(f"./data/test/calibration_{variable}.xlsx", index=False)
+    # calibration_df = pd.DataFrame(results, columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M','MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5','MSE','RMSE'])
+    # calibration_df.to_excel(f"./data/test/calibration_{variable}.xlsx", index=False)
+    results.to_excel(f"./data/test/calibration_{variable}.xlsx", index=False)
     
     end_time = time.time()
     elapsed_time = end_time - start_time

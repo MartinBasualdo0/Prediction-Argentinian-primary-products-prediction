@@ -38,7 +38,7 @@ models_params = {
 df = DataModelPreparation(meses_prediccion=0, meses_testeo=0).test_df # A corregir
 
 def agrega_fila_datos_modelo(args) -> None:
-    calibration_df, variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M = args
+    variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M = args
     tscv = TimeSeriesSplit(n_splits = 5)
     RMSE_list = []
     MSE_list = []
@@ -80,10 +80,6 @@ def agrega_fila_datos_modelo(args) -> None:
     }
     print(new_row)
     return new_row
-    # calibration_df.loc[len(calibration_df)] = new_row
-    # print(calibration_df)
-    # return calibration_df
-
     
 if __name__ == "__main__":
     for modelo in models_params:
@@ -96,16 +92,16 @@ if __name__ == "__main__":
         calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M','MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5','MSE','RMSE'])
         
         pool = mp.Pool(mp.cpu_count())
-        args = [(calibration_df, variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M) for p in range(0,max_p+1) for d in range(0,2) for q in range(0,max_q+1) for P in range(0,2) for D in range(0,2) for Q in range(0,2)]
+        args = [(variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M) for p in range(0,max_p+1) for d in range(0,2) for q in range(0,max_q+1) for P in range(0,2) for D in range(0,2) for Q in range(0,2)]
         results = pool.map(agrega_fila_datos_modelo, args)
         results = pd.DataFrame(results)
         print(f"Resultado del pool:\n",results)
         pool.close()
         
         print(f"Calibration of {variable} terminada!!!")
-        calibration_df = pd.DataFrame(results, columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M','MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5','MSE','RMSE'])
-        # calibration_df = calibration_df.drop_duplicates()  
-        calibration_df.to_excel(f"./data/test/calibration_{variable}.xlsx", index=False)
+        # calibration_df = pd.DataFrame(results, columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M','MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5','MSE','RMSE']) 
+        # calibration_df.to_excel(f"./data/test/calibration_{variable}.xlsx", index=False)
+        results.to_excel(f"./data/test/calibration_{variable}.xlsx", index=False)
         
         end_time = time.time()
         elapsed_time = end_time - start_time
