@@ -7,6 +7,11 @@ import numpy as np
 from math import sqrt
 from sklearn.model_selection import TimeSeriesSplit
 import multiprocessing as mp
+import warnings
+from statsmodels.tools.sm_exceptions import ConvergenceWarning
+warnings.simplefilter('ignore', ConvergenceWarning)
+warnings.simplefilter('ignore', FutureWarning)
+warnings.simplefilter('ignore', UserWarning)
 
 
 max_p = 9
@@ -74,7 +79,7 @@ if __name__ == '__main__':
     pool.close()
 
     calibration_df = pd.DataFrame(results, columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M','MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5','MSE','RMSE'])
-    calibration_df = calibration_df.drop_duplicates()  
+    # calibration_df = calibration_df.drop_duplicates()  
     calibration_df.to_excel(f"./data/test/calibration_{variable}.xlsx", index=False)
     
     end_time = time.time()

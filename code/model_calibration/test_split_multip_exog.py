@@ -7,6 +7,11 @@ import numpy as np
 from math import sqrt
 from sklearn.model_selection import TimeSeriesSplit
 import multiprocessing as mp
+import warnings
+from statsmodels.tools.sm_exceptions import ConvergenceWarning
+warnings.simplefilter('ignore', ConvergenceWarning)
+warnings.simplefilter('ignore', FutureWarning)
+warnings.simplefilter('ignore', UserWarning)
 
 start_time = time.time()
 models_params = {
@@ -32,7 +37,7 @@ models_params = {
 
 df = DataModelPreparation(meses_prediccion=0, meses_testeo=0).test_df # A corregir
 
-def agrega_fila_datos_modelo(args):
+def agrega_fila_datos_modelo(args) -> None:
     calibration_df, variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M = args
     tscv = TimeSeriesSplit(n_splits = 5)
     RMSE_list = []
@@ -73,9 +78,10 @@ def agrega_fila_datos_modelo(args):
         'MSE': MSE,
         'RMSE':RMSE
     }
-    print(new_row)
+    # print(new_row)
     calibration_df.loc[len(calibration_df)] = new_row
     print(calibration_df)
+    return calibration_df
 
     
 if __name__ == "__main__":
@@ -91,6 +97,8 @@ if __name__ == "__main__":
         pool = mp.Pool(mp.cpu_count())
         args = [(calibration_df, variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M) for p in range(0,max_p+1) for d in range(0,2) for q in range(0,max_q+1) for P in range(0,2) for D in range(0,2) for Q in range(0,2)]
         results = pool.map(agrega_fila_datos_modelo, args)
+        results = pd.concat(results)
+        print(f"Resultado del pool:\n",results)
         pool.close()
         
         print(f"Calibration of {variable} terminada!!!")
