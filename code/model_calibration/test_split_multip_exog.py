@@ -44,7 +44,7 @@ def agrega_fila_datos_modelo(args):
         meses_prediccion = cv_test.shape[0]
         sarima_exog = SARIMAX(y, order = (p,d,q), seasonal_order=seasonal_order)
         try:
-            model_fit = sarima_exog.fit(maxiter=20_000)
+            model_fit = sarima_exog.fit(maxiter=20_000, disp = False, method_kwargs= {"warn_convergence": False})
             predictions = model_fit.forecast(meses_prediccion)
             mse_split = mean_squared_error(cv_test[variable], predictions)
             rmse_split = sqrt(mse_split)  
@@ -52,7 +52,7 @@ def agrega_fila_datos_modelo(args):
             MSE_list.append(mse_split)
         except Exception as e:
             print(f"Failed to fit model {p,d,q,Q,D,Q,M} for variable {variable}. Error: {e}")
-            RMSE = "error"
+            RMSE_list = "error"
             MSE_list = "error"
     RMSE = np.mean(RMSE_list) if RMSE_list != "error" else "error"
     MSE = np.mean(MSE_list) if MSE_list != "error" else "error"
@@ -73,11 +73,11 @@ def agrega_fila_datos_modelo(args):
         'MSE': MSE,
         'RMSE':RMSE
     }
+    print(new_row)
     calibration_df.loc[len(calibration_df)] = new_row
 
     
 if __name__ == "__main__":
-    print("topu")
     for modelo in models_params:
         max_p = models_params[modelo]["max_p"]
         max_q = models_params[modelo]["max_q"]
@@ -92,6 +92,7 @@ if __name__ == "__main__":
         results = pool.map(agrega_fila_datos_modelo, args)
         pool.close()
         
+        print(f"Calibration of {variable} terminada!!!")
         calibration_df = pd.DataFrame(results, columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M','MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5','MSE','RMSE'])
         calibration_df = calibration_df.drop_duplicates()  
         calibration_df.to_excel(f"./data/test/calibration_{variable}.xlsx", index=False)

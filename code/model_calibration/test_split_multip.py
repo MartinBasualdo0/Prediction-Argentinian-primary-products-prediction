@@ -32,7 +32,7 @@ def agrega_fila_datos_modelo(args):
         meses_prediccion = cv_test.shape[0]
         sarima_exog = SARIMAX(y, order = (p,d,q),exog=cv_train[X], seasonal_order=seasonal_order)
         try:
-            model_fit = sarima_exog.fit(maxiter=20_000)
+            model_fit = sarima_exog.fit(maxiter=20_000, disp = False, method_kwargs= {"warn_convergence": False})
             predictions = model_fit.forecast(meses_prediccion, exog = cv_test[X])
             mse_split = mean_squared_error(cv_test[variable], predictions)
             rmse_split = sqrt(mse_split)  
