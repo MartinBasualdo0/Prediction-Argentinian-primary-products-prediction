@@ -67,15 +67,15 @@ def agrega_fila_datos_modelo(args):
         'MSE': MSE,
         'RMSE':RMSE
     }
-    print(new_row)
     calibration_df.loc[len(calibration_df)] = new_row
-    
+    return calibration_df
     
 if __name__ == '__main__':
     start_time = time.time()
     pool = mp.Pool(mp.cpu_count())
     args = [(calibration_df, variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M) for p in range(0,max_p+1) for d in range(0,2) for q in range(0,max_q+1) for P in range(0,2) for D in range(0,2) for Q in range(0,2)]
     results = pool.map(agrega_fila_datos_modelo, args)
+    results = pd.concat(results)
     pool.close()
 
     calibration_df = pd.DataFrame(results, columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M','MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5','MSE','RMSE'])
