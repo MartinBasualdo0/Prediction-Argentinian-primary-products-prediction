@@ -1,11 +1,8 @@
-# import code.data_scrap.init_webdriver as web
-from code.data_scrap.init_webdriver.init_webdriver import inicio_driver, scrap_link_xls
+# from init_webdriver.init_webdriver import inicio_driver, scrap_link_xls
+from variables.productos_primarios import scrap_excels_expo_ica_digital
 import os
 import sys
 
 
 if __name__ == "__main__":
-    print("ok")
-    print(sys.path)
-    # print("osd",os.getcwd())
-    # web.inicio_driver("","")
+    scrap_excels_expo_ica_digital(timeout=10, replace=True)
