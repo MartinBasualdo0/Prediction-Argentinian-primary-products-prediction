@@ -19,19 +19,19 @@ max_q = 9
 M=12
 df = DataModelPreparation(meses_prediccion=0, meses_testeo=0).test_df #A corregir
 variable = "pp"
-existe_estacionalidad = True
+seasonality_exists = True
 transform_log = False
 X = ["itcr", "ip", "pre"]
 calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M','MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5','MSE','RMSE'])
 n_splits = 5
 
-def agrega_fila_datos_modelo(args):
+def add_row_model_data(args):
     start_time_model = time.time()
-    variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M = args
+    variable, seasonality_exists, transform_log, p, d, q, P, D, Q, M = args
     tscv = TimeSeriesSplit(n_splits = n_splits)
     RMSE_list = []
     MSE_list = []
-    seasonal_order = (P,D,Q,M) if existe_estacionalidad else (0,0,0,0)  # provide a default value
+    seasonal_order = (P,D,Q,M) if seasonality_exists else (0,0,0,0)  # provide a default value
     for train_index, test_index in tscv.split(df):
         cv_train, cv_test = df.iloc[train_index],df.iloc[test_index]
         y = np.log(cv_train[variable] + 1) if transform_log else cv_train[variable]
@@ -76,8 +76,8 @@ def agrega_fila_datos_modelo(args):
 if __name__ == '__main__':
     start_time = time.time()
     pool = mp.Pool(mp.cpu_count())
-    args = [(variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M) for p in range(0,max_p+1) for d in range(0,2) for q in range(0,max_q+1) for P in range(0,2) for D in range(0,2) for Q in range(0,2)]
-    results = pool.map(agrega_fila_datos_modelo, args)
+    args = [(variable, seasonality_exists, transform_log, p, d, q, P, D, Q, M) for p in range(0,max_p+1) for d in range(0,2) for q in range(0,max_q+1) for P in range(0,2) for D in range(0,2) for Q in range(0,2)]
+    results = pool.map(add_row_model_data, args)
     results = pd.DataFrame(results)
     pool.close()
     results.to_excel(f"./data/test/calibration_{variable}.xlsx", index=False)
