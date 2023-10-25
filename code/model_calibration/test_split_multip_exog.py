@@ -37,7 +37,8 @@ models_params = {
 
 df = DataModelPreparation(meses_prediccion=0, meses_testeo=0).test_df # A corregir
 
-def agrega_fila_datos_modelo(args) -> None:
+def agrega_fila_datos_modelo(args) -> pd.DataFrame:
+    start_time_model = time.time()
     variable, existe_estacionalidad, transform_log, p, d, q, P, D, Q, M = args
     tscv = TimeSeriesSplit(n_splits = 5)
     RMSE_list = []
@@ -61,6 +62,8 @@ def agrega_fila_datos_modelo(args) -> None:
             MSE_list = "error"
     RMSE = np.mean(RMSE_list) if RMSE_list != "error" else "error"
     MSE = np.mean(MSE_list) if MSE_list != "error" else "error"
+    end_time_model = time.time()
+    elapsed_time_model = end_time_model - start_time_model
     new_row = {
         'variable': variable,
         'p': p,
@@ -76,7 +79,8 @@ def agrega_fila_datos_modelo(args) -> None:
         'MSE_split_4': MSE_list[3] if MSE_list !="error" else "error",
         'MSE_split_5': MSE_list[4] if MSE_list !="error" else "error",
         'MSE': MSE,
-        'RMSE':RMSE
+        'RMSE':RMSE,
+        'time' : elapsed_time_model
     }
     print(new_row)
     return new_row
