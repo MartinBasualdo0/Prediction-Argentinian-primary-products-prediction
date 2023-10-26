@@ -4,20 +4,21 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 import time
 import os
+# from init_webdriver.download_folder import download_folder
 
-def inicio_driver(link:str, downloads_folder:str):
+def inicio_driver(link:str, download_folder:str):
     service = Service(ChromeDriverManager().install())
     # carpeta_descarga=os.getcwd().replace('src','downloads')
-    carpeta_descarga=os.getcwd()+'\\downloads'
-    print(carpeta_descarga)
-    # prefs = {'download.default_directory' : carpeta_descarga,
-    #     "directory_upgrade": True}
-    # chrome_options = webdriver.ChromeOptions()
-    # chrome_options.add_experimental_option("prefs", prefs)
-    # driver = webdriver.Chrome(service=service, options=chrome_options)
-    # driver.get(link)
-    # driver.maximize_window()
-    # return driver
+    carpeta_descarga=os.getcwd()+ download_folder
+    # print(carpeta_descarga)
+    prefs = {'download.default_directory' : carpeta_descarga,
+        "directory_upgrade": True}
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_experimental_option("prefs", prefs)
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    driver.get(link)
+    driver.maximize_window()
+    return driver
 
 
 def every_downloads_chrome(driver):
