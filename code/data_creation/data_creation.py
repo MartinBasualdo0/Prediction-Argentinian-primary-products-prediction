@@ -78,4 +78,4 @@ def data_creation():
     return df
 
 if __name__ == "__main__":
-    print(read_precipitations())
+    data_creation()
