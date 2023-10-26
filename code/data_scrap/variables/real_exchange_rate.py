@@ -34,7 +34,7 @@ def get_exchange_rates(download_folder:str) -> pd.DataFrame:
     brecha_neta_mensual = brecha_neta.resample("M").mean()
     brecha_bruta_mensual = 1+brecha_neta_mensual
 
-    df = pd.concat([ccl_mensual, ars_mensual, brecha_neta_mensual],axis=1)
+    df = pd.concat([ccl_mensual, ars_mensual, brecha_bruta_mensual],axis=1)
     df.columns = ["dolar_ccl","offic_er","gap"]
     # print("."+download_folder)
     df.to_excel("."+download_folder+"/exchange_rates.xlsx")

@@ -30,7 +30,7 @@ def scrap_ipc(download_folder:str, timeout:int = 10, replace:bool = True):
     if replace:
         download_rute = "."+download_folder+"\*"
         for file in glob(download_rute, recursive = True): os.remove(file)
-    driver = inicio_driver("https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-2-40", download_folder=download_folder)
+    driver = inicio_driver("https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31", download_folder=download_folder)
     link_ipc_indec = get_ipc_href(driver,timeout)
     driver.get(link_ipc_indec)
     paths = WebDriverWait(driver, 300, 1).until(every_downloads_chrome)
