@@ -8,7 +8,7 @@ def read_primary_products():
     df.index = pd.to_datetime(df.mes + "-"+ df.año, format="%m-%Y")
     df = df[["valor"]]
     df = df.resample('M').mean()
-
+    df = df.rename({"valor":"pp"},axis=1)
     return df
 
 def read_pp_price_index():
@@ -44,21 +44,38 @@ def read_exchange_rate():
     df = pd.read_excel("code\data_scrap\downloads\exchange_rate\exchange_rates.xlsx", index_col="Date")
     return df
 
+def read_precipitations():
+    df = pd.read_excel("code\data_scrap\downloads\precipitations\precipitations.xlsx")
+    df.Date = pd.to_datetime(df.Date, format="%Y-%m-%d")
+    df["month"] = df.Date.dt.month
+    df["year"] = df.Date.dt.year
+    stations = ["ROSARIO","JUNIN", "MARCOS JUAREZ"]
+    df = df.query("Station_name in @stations")
+    df = df.groupby([df.month, df.year],as_index=False).agg({"Precipitations":"mean"})
+    df.index = pd.to_datetime(df.year.astype(str) + "-" + df.month.astype(str), format="%Y-%m")
+    df = df[["Precipitations"]].rename({"Precipitations":"precipitations"},axis=1)
+    df = df.resample('M').mean()
+    return df
+
 def get_real_exchange_rate():
     inflation = read_inflation()
     exchange_rate = read_exchange_rate()
     df = exchange_rate.merge(inflation, left_index=True,right_index=True, how="inner")
     df["exchange_rate_today_prices"]  = df["offic_er"] * (df["inflation"].iloc[-1] / df["inflation"])
     df = df[["gap", "exchange_rate_today_prices"]]
+    df = df.rename({"gap":"exchange_rate_gap"},axis=1)
     return df
 
 def data_creation():
     primary_products = read_primary_products()
     primary_products_price_index = read_pp_price_index()
     exchange_rate_data = get_real_exchange_rate()
+    precipitations = read_precipitations()
     df = primary_products.merge(primary_products_price_index, right_index=True, left_index=True, how="inner")
     df = df.merge(exchange_rate_data, right_index=True, left_index=True, how="inner")
-    df.to_excel("data/data.xlsx")
+    df = df.merge(precipitations, right_index=True, left_index=True, how="inner")
+    df.to_excel("data/data.xlsx") 
     return df
+
 if __name__ == "__main__":
-    print(data_creation())
+    print(read_precipitations())
