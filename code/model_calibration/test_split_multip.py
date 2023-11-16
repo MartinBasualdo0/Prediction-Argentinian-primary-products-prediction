@@ -17,13 +17,16 @@ warnings.simplefilter('ignore', UserWarning)
 max_p = 9
 max_q = 9
 M=12
-df = DataModelPreparation(meses_prediccion=0, meses_testeo=0).test_df #A corregir
+# df = DataModelPreparation(meses_prediccion=0, meses_testeo=0).test_df #A corregir
+df = pd.read_excel("data/data.xlsx")
 variable = "pp"
 seasonality_exists = True
 transform_log = False
-X = ["itcr", "ip", "pre"]
-calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M','MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5','MSE','RMSE'])
-n_splits = 5
+X = ["er_cp", "pi", "pre", "gap"]
+calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M',
+                                       'MSE_split_1','MSE_split_2','MSE_split_3',#'MSE_split_4','MSE_split_5',
+                                       'MSE','RMSE'])
+n_splits = 3
 
 def add_row_model_data(args):
     start_time_model = time.time()
@@ -64,8 +67,8 @@ def add_row_model_data(args):
         'MSE_split_1': MSE_list[0] if MSE_list !="error" else "error",
         'MSE_split_2': MSE_list[1] if MSE_list !="error" else "error",
         'MSE_split_3': MSE_list[2] if MSE_list !="error" else "error",
-        'MSE_split_4': MSE_list[3] if MSE_list !="error" else "error",
-        'MSE_split_5': MSE_list[4] if MSE_list !="error" else "error",
+        # 'MSE_split_4': MSE_list[3] if MSE_list !="error" else "error",
+        # 'MSE_split_5': MSE_list[4] if MSE_list !="error" else "error",
         'MSE': MSE,
         'RMSE':RMSE,
         'time': elapsed_time_model

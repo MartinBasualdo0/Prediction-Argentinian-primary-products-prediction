@@ -9,6 +9,7 @@ def read_primary_products():
     df = df[["valor"]]
     df = df.resample('M').mean()
     df = df.rename({"valor":"pp"},axis=1)
+    df.pp = df.pp / 1_000_000
     return df
 
 def read_pp_price_index():
@@ -18,7 +19,7 @@ def read_pp_price_index():
     df.index = pd.to_datetime(df.Mes + "-"+ df.Año, format="%m-%Y")
     df = df[['índice de precios de los productos primarios']]
     df = df.resample('M').mean()
-    df = df.rename({"índice de precios de los productos primarios": "primary_products_price_index"},axis=1)
+    df = df.rename({"índice de precios de los productos primarios": "pi"},axis=1)
     return df
 
 def read_inflation():
@@ -53,7 +54,7 @@ def read_precipitations():
     df = df.query("Station_name in @stations")
     df = df.groupby([df.month, df.year],as_index=False).agg({"Precipitations":"mean"})
     df.index = pd.to_datetime(df.year.astype(str) + "-" + df.month.astype(str), format="%Y-%m")
-    df = df[["Precipitations"]].rename({"Precipitations":"precipitations"},axis=1)
+    df = df[["Precipitations"]].rename({"Precipitations":"pre"},axis=1)
     df = df.resample('M').mean()
     return df
 
@@ -61,9 +62,9 @@ def get_real_exchange_rate():
     inflation = read_inflation()
     exchange_rate = read_exchange_rate()
     df = exchange_rate.merge(inflation, left_index=True,right_index=True, how="inner")
-    df["exchange_rate_today_prices"]  = df["offic_er"] * (df["inflation"].iloc[-1] / df["inflation"])
-    df = df[["gap", "exchange_rate_today_prices"]]
-    df = df.rename({"gap":"exchange_rate_gap"},axis=1)
+    df["er_cp"]  = df["offic_er"] * (df["inflation"].iloc[-1] / df["inflation"])
+    df = df[["gap", "er_cp"]] #er_cp = Exchange rate constant prices
+    # df = df.rename({"gap":"exchange_rate_gap"},axis=1)
     return df
 
 def data_creation():

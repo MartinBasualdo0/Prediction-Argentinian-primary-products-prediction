@@ -21,13 +21,19 @@ models_params = {
         "seasonality_exists": True,
         "transform_log": True
     },
-    'ip': {
+    'pi': {
         "max_p" : 9,
         "max_q" : 9,
         "seasonality_exists": True,
         "transform_log": False
     },
-    'itcr': {
+    'er_cp': {
+        "max_p" : 9,
+        "max_q" : 9,
+        "seasonality_exists": False,
+        "transform_log": False
+    },
+    'gap':{
         "max_p" : 9,
         "max_q" : 9,
         "seasonality_exists": False,
@@ -35,15 +41,16 @@ models_params = {
     }
 }
 
-df = DataModelPreparation(meses_prediccion=0, meses_testeo=0).test_df # A corregir
+df = pd.read_excel("data/data.xlsx",index_col=0)
+# df = DataModelPreparation(meses_prediccion=0, meses_testeo=0).test_df # A corregir
 
 def add_row_model_data(args) -> pd.DataFrame:
     start_time_model = time.time()
     variable, seasonality_exists, transform_log, p, d, q, P, D, Q, M = args
-    tscv = TimeSeriesSplit(n_splits = 5)
+    tscv = TimeSeriesSplit(n_splits = 3)
     RMSE_list = []
     MSE_list = []
-    seasonal_order = (P,D,Q,M) if seasonality_exists else (0,0,0,0)  # provide a default value
+    seasonal_order = (P,D,Q,M) if seasonality_exists else (0,0,0,0)  # check
     for train_index, test_index in tscv.split(df):
         cv_train, cv_test = df.iloc[train_index],df.iloc[test_index]
         y = np.log(cv_train[variable] + 1) if transform_log else cv_train[variable]
@@ -76,8 +83,8 @@ def add_row_model_data(args) -> pd.DataFrame:
         'MSE_split_1': MSE_list[0] if MSE_list !="error" else "error",
         'MSE_split_2': MSE_list[1] if MSE_list !="error" else "error",
         'MSE_split_3': MSE_list[2] if MSE_list !="error" else "error",
-        'MSE_split_4': MSE_list[3] if MSE_list !="error" else "error",
-        'MSE_split_5': MSE_list[4] if MSE_list !="error" else "error",
+        # 'MSE_split_4': MSE_list[3] if MSE_list !="error" else "error",
+        # 'MSE_split_5': MSE_list[4] if MSE_list !="error" else "error",
         'MSE': MSE,
         'RMSE':RMSE,
         'time' : elapsed_time_model
@@ -93,7 +100,9 @@ if __name__ == "__main__":
         seasonality_exists =  models_params[model]["seasonality_exists"]
         transform_log =  models_params[model]["transform_log"]
         M = 12 if seasonality_exists else 1
-        calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M','MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5','MSE','RMSE'])
+        calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M',
+                                               'MSE_split_1','MSE_split_2','MSE_split_3',#'MSE_split_4','MSE_split_5',
+                                               'MSE','RMSE'])
         
         pool = mp.Pool(mp.cpu_count())
         args = [(variable, seasonality_exists, transform_log, p, d, q, P, D, Q, M) for p in range(0,max_p+1) for d in range(0,2) for q in range(0,max_q+1) for P in range(0,2) for D in range(0,2) for Q in range(0,2)]

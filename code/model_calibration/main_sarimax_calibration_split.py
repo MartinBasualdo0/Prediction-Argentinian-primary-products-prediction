@@ -6,41 +6,49 @@ import time
 import numpy as np
 from math import sqrt
 from sklearn.model_selection import TimeSeriesSplit
+import warnings
+from statsmodels.tools.sm_exceptions import ConvergenceWarning
+warnings.simplefilter('ignore', ConvergenceWarning)
+warnings.simplefilter('ignore', FutureWarning)
+warnings.simplefilter('ignore', UserWarning)
 
 start_time = time.time()
 max_p = 9
 max_q = 9
-df = DataModelPreparation(meses_prediccion=0, meses_testeo=0).test_df #A corregir
+df = pd.read_excel("data/data.xlsx",index_col=0)
 variable = "pp"
-existe_estacionalidad = True
+seasonality_exists = True
 transform_log = False
-X = ["itcr", "ip", "pre"]
+X = ["er_cp", "pi", "pre", "gap"]
 
 
-def agrega_fila_datos_modelo(calibration_df: pd.DataFrame, variable: str, existe_estacionalidad:bool, transform_log:bool,p:int,d:int,q:int,
+def agrega_fila_datos_modelo(calibration_df: pd.DataFrame, variable: str, seasonality_exists:bool, transform_log:bool,p:int,d:int,q:int,
                              P:int=None, D:int=None, Q:int=None, M:int=None):
+    start_time_model = time.time()
     tscv = TimeSeriesSplit(n_splits = 5)
-    RMSE = []
-    MSE = []
-    seasonal_order = (P,D,Q,M) if existe_estacionalidad else (0,0,0,0)  # provide a default value
+    RMSE_list = []
+    MSE_list = []
+    seasonal_order = (P,D,Q,M) if seasonality_exists else (0,0,0,0)  # provide a default value
     for train_index, test_index in tscv.split(df):
         cv_train, cv_test = df.iloc[train_index],df.iloc[test_index]
         y = np.log(cv_train[variable] + 1) if transform_log else cv_train[variable]
         meses_prediccion = cv_test.shape[0]
         sarima_exog = SARIMAX(y, order = (p,d,q),exog=cv_train[X], seasonal_order=seasonal_order)
         try:
-            model_fit = sarima_exog.fit(maxiter=20_000)
+            model_fit = sarima_exog.fit(maxiter=20_000, disp = False, method_kwargs= {"warn_convergence": False})
             predictions = model_fit.forecast(meses_prediccion, exog = cv_test[X])
             mse_split = mean_squared_error(cv_test[variable], predictions)
             rmse_split = sqrt(mse_split)  
-            RMSE.append(rmse_split)
-            MSE.append(mse_split)
+            RMSE_list.append(rmse_split)
+            MSE_list.append(mse_split)
         except Exception as e:
             print(f"Failed to fit model {p,d,q,Q,D,Q,M} for variable {variable}. Error: {e}")
-            RMSE = "error"
-            MSE = "error"
-    RMSE = np.mean(RMSE) if RMSE != "error" else "error"
-    MSE = np.mean(MSE) if MSE != "error" else "error"
+            RMSE_list = "error"
+            MSE_list = "error"
+    RMSE = np.mean(RMSE_list) if RMSE_list != "error" else "error"
+    MSE = np.mean(MSE_list) if MSE_list != "error" else "error"
+    end_time_model = time.time()
+    elapsed_time_model = end_time_model - start_time_model
     new_row = {
         'variable': variable,
         'p': p,
@@ -50,27 +58,34 @@ def agrega_fila_datos_modelo(calibration_df: pd.DataFrame, variable: str, existe
         'D': D,
         'Q': Q,
         'M': M,
+        'MSE_split_1': MSE_list[0] if MSE_list !="error" else "error",
+        'MSE_split_2': MSE_list[1] if MSE_list !="error" else "error",
+        'MSE_split_3': MSE_list[2] if MSE_list !="error" else "error",
+        'MSE_split_4': MSE_list[3] if MSE_list !="error" else "error",
+        'MSE_split_5': MSE_list[4] if MSE_list !="error" else "error",
         'MSE': MSE,
-        'RMSE':RMSE
-    }
+        'RMSE':RMSE,
+        'time': elapsed_time_model,     
+    }    
+    print(new_row) 
     calibration_df.loc[len(calibration_df)] = new_row
         
     
-calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M', 'AIC', 'MSE','RMSE'])
+calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M', "MSE_split_1", "MSE_split_2","MSE_split_3","MSE_split_4", "MSE_split_5" ,'MSE', 'RMSE', 'time'])
 for p in range(0,max_p+1):
     for d in range(0,2):
         for q in range(0,max_q+1):
-            if existe_estacionalidad:   
+            if seasonality_exists:   
                 for P in range(0,2):
                     for D in range(0,2):
                         for Q in range(0,2):
                             M=12
-                            print("MODELO!!!",p,d,q,P,D,Q,M)
-                            agrega_fila_datos_modelo(calibration_df, variable, existe_estacionalidad, transform_log, 
+                            # print("MODELO!!!",p,d,q,P,D,Q,M)
+                            agrega_fila_datos_modelo(calibration_df, variable, seasonality_exists, transform_log, 
                                                      p,d,q,
                                                      P=P,D=D,Q=Q,M=M)
             else:
-                agrega_fila_datos_modelo(calibration_df, variable, existe_estacionalidad, transform_log,p,d,q)
+                agrega_fila_datos_modelo(calibration_df, variable, seasonality_exists, transform_log,p,d,q)
                 
 calibration_df = calibration_df.drop_duplicates()  
 calibration_df.to_excel(f"./data/calibration_sarimax_split/calibration_{variable}.xlsx", index=False)
