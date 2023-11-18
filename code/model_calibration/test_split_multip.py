@@ -13,6 +13,7 @@ warnings.simplefilter('ignore', ConvergenceWarning)
 warnings.simplefilter('ignore', FutureWarning)
 warnings.simplefilter('ignore', UserWarning)
 
+n_splits = 5
 
 max_p = 9
 max_q = 9
@@ -24,9 +25,8 @@ seasonality_exists = True
 transform_log = False
 X = ["er_cp", "pi", "pre", "gap"]
 calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M',
-                                       'MSE_split_1','MSE_split_2','MSE_split_3',#'MSE_split_4','MSE_split_5',
+                                       'MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5',
                                        'MSE','RMSE'])
-n_splits = 3
 
 def add_row_model_data(args):
     start_time_model = time.time()
@@ -34,6 +34,7 @@ def add_row_model_data(args):
     tscv = TimeSeriesSplit(n_splits = n_splits)
     RMSE_list = []
     MSE_list = []
+    AIC_list = []
     seasonal_order = (P,D,Q,M) if seasonality_exists else (0,0,0,0)  # provide a default value
     for train_index, test_index in tscv.split(df):
         cv_train, cv_test = df.iloc[train_index],df.iloc[test_index]
@@ -43,16 +44,22 @@ def add_row_model_data(args):
         try:
             model_fit = sarima_exog.fit(maxiter=20_000, disp = False, method_kwargs= {"warn_convergence": False})
             predictions = model_fit.forecast(meses_prediccion, exog = cv_test[X])
+            aic_split = model_fit.aic
+            predictions = np.exp(predictions) if transform_log else predictions #Ahora debería de estar mejor
             mse_split = mean_squared_error(cv_test[variable], predictions)
             rmse_split = sqrt(mse_split)  
             RMSE_list.append(rmse_split)
             MSE_list.append(mse_split)
+            AIC_list.append(aic_split) 
         except Exception as e:
             print(f"Failed to fit model {p,d,q,Q,D,Q,M} for variable {variable}. Error: {e}")
             RMSE_list = "error"
-            MSE_list = "error"   
+            MSE_list = "error"
+            AIC_list = "error"  
     RMSE = np.mean(RMSE_list) if RMSE_list != "error" else "error"
     MSE = np.mean(MSE_list) if MSE_list != "error" else "error"
+    AIC = np.mean(AIC_list) if AIC_list != "error" else "error"
+
     end_time_model = time.time()
     elapsed_time_model = end_time_model - start_time_model
     new_row = {
@@ -67,8 +74,14 @@ def add_row_model_data(args):
         'MSE_split_1': MSE_list[0] if MSE_list !="error" else "error",
         'MSE_split_2': MSE_list[1] if MSE_list !="error" else "error",
         'MSE_split_3': MSE_list[2] if MSE_list !="error" else "error",
-        # 'MSE_split_4': MSE_list[3] if MSE_list !="error" else "error",
-        # 'MSE_split_5': MSE_list[4] if MSE_list !="error" else "error",
+        'MSE_split_4': MSE_list[3] if MSE_list !="error" else "error",
+        'MSE_split_5': MSE_list[4] if MSE_list !="error" else "error",
+        'AIC_split_1': AIC_list[0] if AIC_list !="error" else "error",
+        'AIC_split_2': AIC_list[1] if AIC_list !="error" else "error",
+        'AIC_split_3': AIC_list[2] if AIC_list !="error" else "error",
+        'AIC_split_4': AIC_list[3] if AIC_list !="error" else "error",
+        'AIC_split_5': AIC_list[4] if AIC_list !="error" else "error",
+        'AIC' : AIC,
         'MSE': MSE,
         'RMSE':RMSE,
         'time': elapsed_time_model
@@ -83,7 +96,7 @@ if __name__ == '__main__':
     results = pool.map(add_row_model_data, args)
     results = pd.DataFrame(results)
     pool.close()
-    results.to_excel(f"./data/test/calibration_{variable}.xlsx", index=False)
+    results.to_excel(f"./data/calibration_sarimax_{n_splits}_splits_aic/calibration_{variable}.xlsx", index=False)
     
     end_time = time.time()
     elapsed_time = end_time - start_time

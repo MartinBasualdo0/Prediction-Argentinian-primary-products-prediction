@@ -13,6 +13,8 @@ warnings.simplefilter('ignore', ConvergenceWarning)
 warnings.simplefilter('ignore', FutureWarning)
 warnings.simplefilter('ignore', UserWarning)
 
+n_splits = 5
+
 start_time = time.time()
 models_params = {
     'pre': {
@@ -47,9 +49,10 @@ df = pd.read_excel("data/data.xlsx",index_col=0)
 def add_row_model_data(args) -> pd.DataFrame:
     start_time_model = time.time()
     variable, seasonality_exists, transform_log, p, d, q, P, D, Q, M = args
-    tscv = TimeSeriesSplit(n_splits = 3)
+    tscv = TimeSeriesSplit(n_splits = n_splits)
     RMSE_list = []
     MSE_list = []
+    AIC_list = []
     seasonal_order = (P,D,Q,M) if seasonality_exists else (0,0,0,0)  # check
     for train_index, test_index in tscv.split(df):
         cv_train, cv_test = df.iloc[train_index],df.iloc[test_index]
@@ -58,17 +61,22 @@ def add_row_model_data(args) -> pd.DataFrame:
         sarima_exog = SARIMAX(y, order = (p,d,q), seasonal_order=seasonal_order)
         try:
             model_fit = sarima_exog.fit(maxiter=20_000, disp = False, method_kwargs= {"warn_convergence": False})
-            predictions = model_fit.forecast(meses_prediccion)
+            predictions = model_fit.forecast(meses_prediccion) 
+            aic_split = model_fit.aic
+            predictions = np.exp(predictions) if transform_log else predictions #Ahora debería de estar mejor
             mse_split = mean_squared_error(cv_test[variable], predictions)
-            rmse_split = sqrt(mse_split)  
+            rmse_split = sqrt(mse_split)
+            AIC_list.append(aic_split) 
             RMSE_list.append(rmse_split)
             MSE_list.append(mse_split)
         except Exception as e:
             print(f"Failed to fit model {p,d,q,Q,D,Q,M} for variable {variable}. Error: {e}")
             RMSE_list = "error"
             MSE_list = "error"
+            AIC_list = "error"
     RMSE = np.mean(RMSE_list) if RMSE_list != "error" else "error"
     MSE = np.mean(MSE_list) if MSE_list != "error" else "error"
+    AIC = np.mean(AIC_list) if AIC_list != "error" else "error"
     end_time_model = time.time()
     elapsed_time_model = end_time_model - start_time_model
     new_row = {
@@ -83,10 +91,16 @@ def add_row_model_data(args) -> pd.DataFrame:
         'MSE_split_1': MSE_list[0] if MSE_list !="error" else "error",
         'MSE_split_2': MSE_list[1] if MSE_list !="error" else "error",
         'MSE_split_3': MSE_list[2] if MSE_list !="error" else "error",
-        # 'MSE_split_4': MSE_list[3] if MSE_list !="error" else "error",
-        # 'MSE_split_5': MSE_list[4] if MSE_list !="error" else "error",
+        'MSE_split_4': MSE_list[3] if MSE_list !="error" else "error",
+        'MSE_split_5': MSE_list[4] if MSE_list !="error" else "error",
+        'AIC_split_1': AIC_list[0] if AIC_list !="error" else "error",
+        'AIC_split_2': AIC_list[1] if AIC_list !="error" else "error",
+        'AIC_split_3': AIC_list[2] if AIC_list !="error" else "error",
+        'AIC_split_4': AIC_list[3] if AIC_list !="error" else "error",
+        'AIC_split_5': AIC_list[4] if AIC_list !="error" else "error",
         'MSE': MSE,
         'RMSE':RMSE,
+        'AIC' : AIC,
         'time' : elapsed_time_model
     }
     print(new_row)
@@ -100,9 +114,10 @@ if __name__ == "__main__":
         seasonality_exists =  models_params[model]["seasonality_exists"]
         transform_log =  models_params[model]["transform_log"]
         M = 12 if seasonality_exists else 1
-        calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M',
-                                               'MSE_split_1','MSE_split_2','MSE_split_3',#'MSE_split_4','MSE_split_5',
-                                               'MSE','RMSE'])
+        # calibration_df = pd.DataFrame(columns=['variable', 'p', 'd', 'q', 'P', 'D', 'Q', 'M',
+        #                                        'MSE_split_1','MSE_split_2','MSE_split_3','MSE_split_4','MSE_split_5',
+        #                                        'AIC_split_1','AIC_split_2','AIC_split_3','AIC_split_4','AIC_split_5',
+        #                                        'MSE','RMSE', 'AIC', 'time'])
         
         pool = mp.Pool(mp.cpu_count())
         args = [(variable, seasonality_exists, transform_log, p, d, q, P, D, Q, M) for p in range(0,max_p+1) for d in range(0,2) for q in range(0,max_q+1) for P in range(0,2) for D in range(0,2) for Q in range(0,2)]
@@ -112,7 +127,7 @@ if __name__ == "__main__":
         pool.close()
         
         print(f"Calibration of {variable} finished!!!")
-        results.to_excel(f"./data/test/calibration_{variable}.xlsx", index=False)
+        results.to_excel(f"./data/calibration_sarimax_{n_splits}_splits_aic/calibration_{variable}.xlsx", index=False)
         
         end_time = time.time()
         elapsed_time = end_time - start_time
