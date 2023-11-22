@@ -8,10 +8,10 @@ import os
 
 def inicio_driver(link:str, download_folder:str):
     service = Service(ChromeDriverManager().install())
-    # carpeta_descarga=os.getcwd().replace('src','downloads')
-    carpeta_descarga=os.getcwd()+ download_folder
-    # print(carpeta_descarga)
-    prefs = {'download.default_directory' : carpeta_descarga,
+    # download_folder=os.getcwd().replace('src','downloads')
+    download_folder=os.getcwd()+ download_folder
+    # print(download_folder)
+    prefs = {'download.default_directory' : download_folder,
         "directory_upgrade": True}
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_experimental_option("prefs", prefs)
@@ -23,9 +23,9 @@ def inicio_driver(link:str, download_folder:str):
 def every_downloads_chrome(download_folder:str):
     '''Check if all downloads are complete'''
     while True:
-        carpeta_descarga=os.getcwd()+ download_folder
+        download_folder=os.getcwd()+ download_folder
         time.sleep(.5)
-        incomplete_downloads = [name for name in os.listdir(carpeta_descarga) if name.endswith('.tmp')]
+        incomplete_downloads = [name for name in os.listdir(download_folder) if name.endswith('.tmp')]
         if not incomplete_downloads:
             return True  # Return True when no more .crdownload files in the directory
         time.sleep(1)  # Wait for 1 second before checking again
