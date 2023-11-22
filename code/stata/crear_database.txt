@@ -1,8 +1,0 @@
-cd "C:\Users\mbasualdo\OneDrive - Económicas - UBA\Maestría UDESA\6- Técnicas de producción de conocimiento académico y profesional\TP4\Productos Primarios"
-import excel "data\variables.xlsx", clear sheet("Hoja1") firstrow
-label var itcr "Tipo de cambio real"
-label var ip "índice de precios de las exportaciones de los productos primarios"
-label var pre "Precipitaciones"
-label var pp "Exportaciones de los productos primarios"
-notes _dta : El precio y el valor de los productos primarios tiene como fuente al INDEC. Las precipitaciones tiene como fuente alphacast en base a NCEI, y es un promedio simple entre las estaciones meteorológicas de Rosario, Junín y Marcos Juárez; los valores se expresan en décimas de milímetro. El tipo de cambio real consiste en la deflacción entre el tipo de cambio oficial y el índice de inflación.
-save "data/variables_productos_primarios.dta", replace

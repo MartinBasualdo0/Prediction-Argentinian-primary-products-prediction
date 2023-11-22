@@ -1,2 +1,4 @@
 .venv
 alphacast_key.py
+*.pyc
+_pycache_

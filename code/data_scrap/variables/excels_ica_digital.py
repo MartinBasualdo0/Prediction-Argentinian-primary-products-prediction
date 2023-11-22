@@ -1,10 +1,11 @@
-from init_webdriver.init_webdriver import inicio_driver, every_downloads_chrome
-from init_webdriver.download_folder import download_primary_products
+from init_webdriver.init_webdriver import inicio_driver, wait_for_downloads_to_complete
+# from init_webdriver.download_folder import download_primary_products
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from glob import glob
 import os
+import time
 
 def get_ica_digital_href(driver, timeout:int = 10):
     wait = WebDriverWait(driver, timeout)
@@ -28,5 +29,6 @@ def scrap_excels_ica_digital(xlsx_end_point:str,download_folder:str, timeout:int
     driver = inicio_driver("https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-2-40", download_folder=download_folder)
     link_ica_digital = get_ica_digital_href(driver,timeout)
     driver.get(link_ica_digital+f"data/cuadros/{xlsx_end_point}")
-    paths = WebDriverWait(driver, 300, 1).until(every_downloads_chrome)
+    time.sleep(.5)
+    wait_for_downloads_to_complete(download_folder)
     driver.quit()

@@ -19,21 +19,25 @@ def inicio_driver(link:str, download_folder:str):
     driver.get(link)
     driver.maximize_window()
     return driver
-
-
-def every_downloads_chrome(driver):
-    '''Para ver cuando terminan las descargas'''
-    if not driver.current_url.startswith("chrome://downloads"):
-        driver.get("chrome://downloads/")
-    return driver.execute_script("""
-        var items = document.querySelector('downloads-manager')
-            .shadowRoot.getElementById('downloadsList').items;
-        if (items.every(e => e.state === "COMPLETE"))
-            return items.map(e => e.fileUrl || e.file_url);
-        """)
     
-def scrap_link_xls(url:str):
-    driver = inicio_driver(url)
-    # waits for all the files to be completed and returns the paths
-    paths = WebDriverWait(driver, 120, 1).until(every_downloads_chrome)
+def every_downloads_chrome(download_folder:str):
+    '''Check if all downloads are complete'''
+    while True:
+        carpeta_descarga=os.getcwd()+ download_folder
+        time.sleep(.5)
+        incomplete_downloads = [name for name in os.listdir(carpeta_descarga) if name.endswith('.tmp')]
+        if not incomplete_downloads:
+            return True  # Return True when no more .crdownload files in the directory
+        time.sleep(1)  # Wait for 1 second before checking again
+
+
+def wait_for_downloads_to_complete(download_folder:str, timeout:int = 100):
+    '''Wait for all downloads to complete with a timeout'''
+    start_time = time.time()  # Save the start time
+
+    while not every_downloads_chrome(download_folder):  # Wait until all downloads are complete
+        if time.time() - start_time > timeout:  # If the timeout has elapsed, break the loop
+            print('Timeout elapsed, stopping downloads')
+            break
+        time.sleep(1)  # Wait for 1 second before checking again
     
