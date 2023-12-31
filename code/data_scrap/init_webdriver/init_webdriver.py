@@ -25,7 +25,7 @@ def every_downloads_chrome(download_folder:str):
     while True:
         download_folder=os.getcwd()+ download_folder
         time.sleep(.5)
-        incomplete_downloads = [name for name in os.listdir(download_folder) if name.endswith('.tmp')]
+        incomplete_downloads = [name for name in os.listdir(download_folder) if name.endswith('.tmp') or name.endswith('.crdownload')]
         if not incomplete_downloads:
             return True  # Return True when no more .crdownload files in the directory
         time.sleep(1)  # Wait for 1 second before checking again
